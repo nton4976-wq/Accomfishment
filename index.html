@@ -1,0 +1,1722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Smart Attendance</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+
+  <style>
+    :root {
+      /* ===================== GREENFOREST THEME (ACCENTS ONLY) ===================== */
+      --primary: #0b5d1e;
+      --primary-light: #22c55e;
+      --primary-dark: #064117;
+      --success: #16a34a;
+      --success-light: #34d399;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --info: #0ea5e9;
+
+      /* Background colors (NOT changed) */
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-tertiary: #334155;
+      --bg-card: rgba(30, 41, 59, 0.7);
+
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-muted: #94a3b8;
+
+      --border-subtle: rgba(255, 255, 255, 0.06);
+      --border-default: rgba(255, 255, 255, 0.1);
+
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+      --shadow-glow: 0 0 0 3px rgba(34, 197, 94, 0.16);
+
+      --radius: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+
+      --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+      --transition: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      min-height: 100vh;
+      color: var(--text-primary);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+      touch-action: manipulation;
+    }
+
+    /* Background stays same */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% 40%, rgba(79, 70, 229, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse 60% 40% at 80% 60%, rgba(16, 185, 129, 0.1) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: -1;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+      opacity: 0.02;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .navbar {
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(20px) saturate(180%);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 0.75rem 0;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .navbar-brand {
+      font-weight: 800;
+      font-size: 1.25rem;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      letter-spacing: -0.02em;
+      text-decoration: none;
+    }
+
+    /* ✅ NEW LOGO STYLE (BIG + CLEAR) */
+    .brand-logo {
+      width: 86px;
+      height: 86px;
+      object-fit: contain;
+      flex-shrink: 0;
+      filter: drop-shadow(0 6px 18px rgba(34, 197, 94, 0.18));
+    }
+    @media (min-width: 576px){
+      .brand-logo { width: 54px; height: 54px; }
+    }
+
+    .navbar-toggler {
+      border: 1px solid var(--border-subtle);
+      padding: 0.5rem;
+      border-radius: var(--radius);
+      color: var(--text-primary);
+    }
+    .navbar-toggler:focus { box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.18); }
+
+    .nav-link {
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: var(--text-muted) !important;
+      padding: 0.625rem 1rem !important;
+      border-radius: var(--radius);
+      transition: all var(--transition-fast);
+      margin: 0.25rem 0;
+      position: relative;
+    }
+    .nav-link:hover { color: var(--text-secondary) !important; background: rgba(255, 255, 255, 0.03); }
+    .nav-link.active { color: var(--text-primary) !important; background: rgba(34, 197, 94, 0.10); }
+
+    .nav-meta {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem 0;
+      border-top: 1px solid var(--border-subtle);
+      margin-top: 0.5rem;
+    }
+    @media (min-width: 992px) {
+      .nav-meta { padding-left: 1.5rem; border-left: 1px solid var(--border-subtle); border-top: none; margin-top: 0; }
+    }
+
+    #clockTime { font-weight: 700; font-size: 1rem; color: var(--text-primary); }
+    #clockDate { font-size: 0.6875rem; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    .session-badge {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.375rem 0.75rem;
+      border-radius: 100px;
+      border: 1px solid var(--border-default);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      white-space: nowrap;
+    }
+    .session-badge::before {
+      content: '';
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 6px var(--success);
+    }
+    .session-badge.afternoon::before { background: var(--warning); box-shadow: 0 0 6px var(--warning); }
+
+    .main-container { padding: 1rem; max-width: 1600px; margin: 0 auto; }
+    @media (min-width: 768px) { .main-container { padding: 1.5rem; } }
+    @media (min-width: 1200px) { .main-container { padding: 2rem; } }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+    @media (min-width: 576px) { .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; } }
+    @media (min-width: 992px) { .stats-grid { grid-template-columns: repeat(4, 1fr); gap: 1.25rem; } }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius);
+      padding: 1rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      transition: all var(--transition);
+    }
+    .stat-card:hover { transform: translateY(-2px); border-color: var(--border-default); box-shadow: var(--shadow-lg); }
+
+    .stat-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .stat-icon.blue   { background: rgba(34, 197, 94, 0.12); color: var(--primary-light); }
+    .stat-icon.green  { background: rgba(22, 163, 74, 0.14); color: var(--success-light); }
+    .stat-icon.purple { background: rgba(11, 93, 30, 0.20); color: rgba(167, 243, 208, 1); }
+    .stat-icon.orange { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+
+    .stat-content { flex: 1; min-width: 0; }
+    .stat-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; margin-bottom: 0.125rem; }
+    .stat-value { font-size: 1.5rem; font-weight: 800; color: var(--text-primary); }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+      align-items: start; /* table adjusts only */
+    }
+    @media (min-width: 1200px) { .content-grid { grid-template-columns: 420px 1fr; gap: 1.5rem; } }
+
+    .glass-card, .table-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .card-header-title {
+      font-weight: 900;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .card-header-title i { color: var(--primary-light); }
+
+    .badge-soft {
+      font-size: 0.75rem;
+      font-weight: 900;
+      padding: 0.35rem 0.9rem;
+      border-radius: 999px;
+      background: rgba(34, 197, 94, 0.10);
+      color: rgba(187, 247, 208, 1);
+      border: 1px solid rgba(34, 197, 94, 0.22);
+    }
+
+    .card-body { padding: 1.25rem; }
+
+    .scanner-wrapper {
+      position: relative;
+      background: var(--bg-primary);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      aspect-ratio: 4/3;
+      border: 1px solid rgba(255,255,255,0.10);
+    }
+    #reader { width: 100%; height: 100%; object-fit: cover; }
+
+    .scanner-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .scan-frame { width: 220px; height: 220px; position: relative; }
+    .scan-corner { position: absolute; width: 24px; height: 24px; border-color: var(--success); border-style: solid; border-width: 3px; }
+    .scan-corner.tl { top: 0; left: 0; border-right: 0; border-bottom: 0; border-top-left-radius: 12px; }
+    .scan-corner.tr { top: 0; right: 0; border-left: 0; border-bottom: 0; border-top-right-radius: 12px; }
+    .scan-corner.bl { bottom: 0; left: 0; border-right: 0; border-top: 0; border-bottom-left-radius: 12px; }
+    .scan-corner.br { bottom: 0; right: 0; border-left: 0; border-top: 0; border-bottom-right-radius: 12px; }
+
+    .scan-line {
+      position: absolute;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--success), transparent);
+      box-shadow: 0 0 12px var(--success);
+      opacity: 0;
+      transition: opacity var(--transition);
+    }
+    .scanning .scan-line { opacity: 1; animation: scan 2.5s linear infinite; }
+    @keyframes scan {
+      0% { top: 0; opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { top: 100%; opacity: 0; }
+    }
+
+    .scanner-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-secondary);
+      color: var(--text-muted);
+      gap: 0.75rem;
+      text-align: center;
+      padding: 1rem;
+    }
+    .scanner-placeholder i { font-size: 3rem; opacity: 0.25; }
+
+    .controls-grid { display: grid; grid-template-columns: 1fr; gap: 0.75rem; margin: 1rem 0; }
+    @media (min-width: 576px) { .controls-grid { grid-template-columns: 1fr 1fr; } }
+
+    .form-select-custom {
+      background: var(--bg-secondary);
+      border: 1px solid rgba(255,255,255,0.10);
+      color: var(--text-primary);
+      border-radius: var(--radius);
+      padding: 0.65rem 2.5rem 0.65rem 0.95rem;
+      font-size: 0.9rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.75rem center;
+      background-size: 1rem;
+      width: 100%;
+    }
+    .form-select-custom:focus { outline: none; border-color: rgba(34,197,94,0.55); box-shadow: var(--shadow-glow); }
+
+    .btn-group { display: flex; gap: 0.75rem; }
+    .btn {
+      font-weight: 900;
+      font-size: 0.95rem;
+      padding: 0.85rem 1rem;
+      border-radius: var(--radius);
+      border: none;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      width: 100%;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+      color: white;
+      flex: 1;
+      box-shadow: 0 12px 30px rgba(34,197,94,0.16);
+    }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 16px 38px rgba(34,197,94,0.22); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      border: 1px solid rgba(255,255,255,0.10);
+      flex: 0.75;
+    }
+
+    .scan-flash {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(circle, rgba(34, 197, 94, 0.28) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 150ms ease;
+      z-index: 10;
+    }
+    .scan-flash.on { opacity: 1; }
+
+    /* ===================== LIVE TABLE HEADER (STACKED DROPDOWNS) ===================== */
+    .table-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+      flex-shrink: 0;
+    }
+    @media (min-width: 576px) {
+      .table-header {
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+    }
+
+    .table-title-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+      min-width: 220px;
+    }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.9rem;
+      font-weight: 900;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+    .status-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 0 4px rgba(22,163,74,0.18);
+    }
+    .status-dot.scanning {
+      background: var(--warning);
+      box-shadow: 0 0 0 4px rgba(245,158,11,0.18);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.55} }
+
+    /* ✅ stacked controls */
+    .table-controls {
+      display: flex;
+      flex-direction: column;       /* STACK */
+      gap: 0.65rem;
+      width: 100%;
+    }
+    @media (min-width: 576px){
+      .table-controls { width: 380px; align-items: stretch; }
+    }
+    .control-label {
+      font-size: 0.78rem;
+      font-weight: 900;
+      color: var(--text-muted);
+      margin-bottom: 0.25rem;
+      letter-spacing: 0.02em;
+      text-transform: none;
+    }
+    .control-block { width: 100%; }
+
+    /* ===================== ✅ SCROLLABLE TABLE AREA (VERTICAL + HORIZONTAL) ===================== */
+    .table-container{
+      display:flex;
+      flex-direction:column;
+      min-height:0;       /* IMPORTANT for flex scrolling */
+      overflow:hidden;    /* header+footer stay visible */
+    }
+    .table-header{ flex: 0 0 auto; }
+    .table-footer{ flex: 0 0 auto; }
+
+    .table-responsive{
+      flex: 1 1 auto;
+      min-height: 0;      /* IMPORTANT */
+      overflow: auto;     /* ✅ vertical + horizontal */
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+
+    .custom-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; min-width: 680px; }
+    .custom-table thead { position: sticky; top: 0; z-index: 10; }
+    .custom-table th {
+      background: var(--bg-secondary);
+      color: var(--text-muted);
+      font-weight: 900;
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      padding: 1rem 1.25rem;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      white-space: nowrap;
+    }
+    .custom-table td {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      color: var(--text-secondary);
+      vertical-align: middle;
+      white-space: nowrap; /* helps horizontal scroll feel consistent */
+    }
+    .custom-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+    .student-cell { display:flex; align-items:center; gap: 0.875rem; }
+    .avatar {
+      width: 42px; height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+      color: #fff;
+      display:flex; align-items:center; justify-content:center;
+      font-weight: 900;
+      flex-shrink: 0;
+    }
+    .student-info { display:flex; flex-direction:column; min-width:0; }
+    .student-name { font-weight: 900; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .student-meta { font-size: 0.85rem; color: var(--text-muted); }
+
+    .time-cell { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-weight: 800; }
+    .hours-cell { font-weight: 1000; color: var(--success-light); text-align: right; white-space: nowrap; }
+
+    .table-footer {
+      padding: 0.9rem 1.25rem;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      background: rgba(15, 23, 42, 0.35);
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex-shrink: 0;
+    }
+
+    #liveWrapper.show-am .col-pm,
+    #liveWrapper.show-pm .col-am { display: none; }
+
+    /* ===================== CENTER POPUP ===================== */
+    .center-pop {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 99999;
+      pointer-events: none;
+    }
+    .center-pop.show { display: flex; }
+    .center-pop-card {
+      pointer-events: auto;
+      min-width: 300px;
+      max-width: 92vw;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(15, 23, 42, 0.88);
+      backdrop-filter: blur(18px) saturate(160%);
+      box-shadow: 0 25px 70px rgba(0,0,0,.55);
+      overflow: hidden;
+      transform: translateY(8px) scale(0.98);
+      opacity: 0;
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+    .center-pop.show .center-pop-card { opacity: 1; transform: translateY(0) scale(1); }
+    .center-pop-top {
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: linear-gradient(135deg, rgba(11, 93, 30, 0.45), rgba(34, 197, 94, 0.18));
+    }
+    .center-pop-icon {
+      width: 40px; height: 40px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(34,197,94,0.18);
+      border: 1px solid rgba(34,197,94,0.22);
+      color: rgba(187,247,208,1);
+      flex-shrink: 0;
+    }
+    .center-pop-title { font-weight: 900; font-size: 1rem; color: var(--text-primary); line-height: 1.2; }
+    .center-pop-body { padding: 14px 16px 16px; color: var(--text-secondary); font-weight: 650; font-size: 0.92rem; }
+    .center-pop-sub { margin-top: 4px; color: var(--text-muted); font-weight: 600; font-size: 0.82rem; }
+
+    /* ===================== PIN MODAL ===================== */
+    .pin-modal .modal-content{
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: var(--radius-xl);
+      box-shadow: 0 20px 60px rgba(0,0,0,.45);
+      backdrop-filter: blur(18px) saturate(160%);
+      overflow: hidden;
+    }
+    .pin-modal .modal-header{ border-bottom: 1px solid rgba(255,255,255,0.08); padding: 1rem 1.25rem; }
+    .pin-modal .modal-title{
+      font-weight: 900;
+      font-size: 1rem;
+      display:flex;
+      align-items:center;
+      gap:.6rem;
+    }
+    .pin-chip{
+      font-size: .72rem;
+      font-weight: 900;
+      padding: .25rem .6rem;
+      border-radius: 999px;
+      border: 1px solid rgba(34,197,94,0.22);
+      background: rgba(34,197,94,0.10);
+      color: rgba(187,247,208,1);
+    }
+    .pin-modal .modal-body{ padding: 1.25rem; }
+    .pin-help{ color: var(--text-muted); font-size: .9rem; margin-bottom: .85rem; }
+    .pin-input{
+      width: 100%;
+      background: rgba(2,6,23,0.6);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: var(--text-primary);
+      border-radius: var(--radius);
+      padding: .9rem 1rem;
+      font-size: 1.1rem;
+      font-weight: 900;
+      letter-spacing: .25em;
+      text-align: center;
+      outline: none;
+    }
+    .pin-input:focus{ border-color: rgba(34,197,94,0.55); box-shadow: 0 0 0 3px rgba(34,197,94,0.16); }
+    .pin-error{
+      display:none;
+      margin-top: .6rem;
+      color: #fca5a5;
+      font-weight: 800;
+      font-size: .9rem;
+    }
+    .pin-modal .modal-footer{ border-top: 1px solid rgba(255,255,255,0.08); padding: .9rem 1.25rem; gap: .5rem; }
+    .pin-btn{
+      flex:1;
+      border-radius: var(--radius);
+      padding: .8rem 1rem;
+      font-weight: 900;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.06);
+      color: var(--text-primary);
+      transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
+    }
+    .pin-btn:hover{ background: rgba(255,255,255,0.10); border-color: rgba(34,197,94,0.25); transform: translateY(-1px); }
+    .pin-btn.primary{ background: rgba(11,93,30,0.92); border-color: rgba(11,93,30,0.92); }
+    .pin-btn.primary:hover{ background: rgba(6,65,23,1); border-color: rgba(6,65,23,1); }
+  </style>
+</head>
+
+<body>
+  <nav class="navbar navbar-expand-lg">
+    <div class="container-fluid px-3 px-md-4">
+      <a class="navbar-brand" href="#">
+        <img class="brand-logo" src="rsu_logo_transparent.png" alt="RSU Logo" />
+        <span class="d-none d-sm-inline">SmartAttendance Pro</span>
+        <span class="d-sm-none">SmartAttend</span>
+      </a>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Toggle navigation">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto align-items-lg-center">
+          <li class="nav-item">
+            <a class="nav-link active" href="#scanner" data-bs-toggle="tab">
+              <i class="fa-solid fa-camera me-2"></i>Scanner
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="profile.html">
+              <i class="fa-solid fa-id-card me-2"></i>Profiles
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="registrationLink"
+              href="https://script.google.com/macros/s/AKfycbyLsU64MflVmxrwu7JqXWyGwhLQurraonO4bS3kj7Lulwx2OD_-hakoajbPatjBINehMQ/exec?page=register"
+              target="_blank" rel="noopener">
+              <i class="fa-solid fa-user-plus me-2"></i>Registration
+            </a>
+          </li>
+        </ul>
+
+        <div class="nav-meta">
+          <div class="clock-group">
+            <div id="clockTime">--:--:--</div>
+            <div id="clockDate">Loading...</div>
+          </div>
+          <span id="sessionBadge" class="session-badge">Morning</span>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="main-container">
+    <div class="tab-content">
+      <div class="tab-pane fade show active" id="scanner">
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon blue"><i class="fa-solid fa-users"></i></div>
+            <div class="stat-content">
+              <div class="stat-label">Total Today</div>
+              <div class="stat-value" id="statTotal">0</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon green"><i class="fa-solid fa-arrow-right-to-bracket"></i></div>
+            <div class="stat-content">
+              <div class="stat-label">Checked In</div>
+              <div class="stat-value" id="statCheckedIn">0</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon purple"><i class="fa-solid fa-arrow-right-from-bracket"></i></div>
+            <div class="stat-content">
+              <div class="stat-label">Checked Out</div>
+              <div class="stat-value" id="statCheckedOut">0</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon orange"><i class="fa-solid fa-hourglass-half"></i></div>
+            <div class="stat-content">
+              <div class="stat-label">Pending</div>
+              <div class="stat-value" id="statPending">0</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="content-grid">
+          <!-- LEFT -->
+          <div class="glass-card" id="scannerCard">
+            <div class="card-header">
+              <div class="card-header-title">
+                <i class="fa-solid fa-camera"></i>
+                QR Scanner
+              </div>
+              <span class="badge-soft" id="scanModeBadge">Auto Detect</span>
+            </div>
+
+            <div class="card-body">
+              <div class="scanner-wrapper" id="scannerContainer">
+                <div id="reader"></div>
+                <div class="scan-flash" id="scanFlash"></div>
+
+                <div class="scanner-overlay" id="scannerOverlay">
+                  <div class="scan-frame">
+                    <div class="scan-corner tl"></div>
+                    <div class="scan-corner tr"></div>
+                    <div class="scan-corner bl"></div>
+                    <div class="scan-corner br"></div>
+                    <div class="scan-line"></div>
+                  </div>
+                </div>
+
+                <div class="scanner-placeholder" id="scannerPlaceholder">
+                  <i class="fa-solid fa-camera-slash"></i>
+                  <p style="font-weight:900; font-size:1.05rem;">Camera Inactive</p>
+                  <small>Click Start to begin scanning</small>
+                </div>
+              </div>
+
+              <div class="controls-grid">
+                <select id="cameraSelect" class="form-select-custom">
+                  <option value="">Select Camera...</option>
+                </select>
+                <select id="scanMode" class="form-select-custom"></select>
+              </div>
+
+              <div class="btn-group">
+                <button id="btnStart" class="btn btn-primary">
+                  <i class="fa-solid fa-play"></i>
+                  <span>Start Scanner</span>
+                </button>
+                <button id="btnStop" class="btn btn-secondary" disabled>
+                  <i class="fa-solid fa-stop"></i>
+                  <span>Stop</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT -->
+          <div class="table-container" id="tableCard">
+            <div class="table-header">
+              <div class="table-title-wrap">
+                <div class="card-header-title" style="padding:0;border:none;">
+                  <i class="fa-solid fa-list-ul"></i>
+                  Live Activity
+                </div>
+                <div class="status-pill">
+                  <span class="status-dot" id="systemStatus"></span>
+                  <span id="systemStatusText">Online</span>
+                </div>
+              </div>
+
+              <div class="table-controls">
+                <div class="control-block">
+                  <div class="control-label">Date</div>
+                  <select id="dateSelect" class="form-select-custom">
+                    <option value="">Loading dates...</option>
+                  </select>
+                </div>
+                <div class="control-block">
+                  <div class="control-label">View</div>
+                  <select id="liveSessionFilter" class="form-select-custom">
+                    <option value="auto">Auto (Current)</option>
+                    <option value="am">AM Only</option>
+                    <option value="pm">PM Only</option>
+                    <option value="all">All Day</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- ✅ Scrollable area (both directions); header+footer stay visible -->
+            <div id="liveWrapper" class="table-responsive">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>Student</th>
+                    <th class="d-none d-md-table-cell">Date</th>
+                    <th class="col-am">AM In</th>
+                    <th class="col-am">AM Out</th>
+                    <th class="col-pm">PM In</th>
+                    <th class="col-pm">PM Out</th>
+                    <th class="text-end">Total</th>
+                  </tr>
+                </thead>
+                <tbody id="liveLogBody"></tbody>
+              </table>
+            </div>
+
+            <div class="table-footer" id="lastScanInfo">
+              <i class="fa-solid fa-circle-notch fa-spin"></i>
+              <span>Loading data from sheet...</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- SUCCESS CENTER POPUP -->
+  <div class="center-pop" id="centerPop" aria-hidden="true">
+    <div class="center-pop-card" role="dialog" aria-modal="true" aria-label="Success message">
+      <div class="center-pop-top">
+        <div class="center-pop-icon"><i class="fa-solid fa-circle-check"></i></div>
+        <div>
+          <div class="center-pop-title" id="centerPopTitle">Processed Successfully</div>
+          <div class="center-pop-sub" id="centerPopSub">Saved to sheet</div>
+        </div>
+      </div>
+      <div class="center-pop-body" id="centerPopBody">
+        ✅ Process completed successfully.
+      </div>
+    </div>
+  </div>
+
+  <!-- PIN MODAL -->
+  <div class="modal fade pin-modal" id="pinModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title">
+            <i class="fa-solid fa-shield-halved"></i>
+            Admin PIN Required
+            <span class="pin-chip" id="pinChip">Time In</span>
+          </div>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="pin-help" id="pinHelp">Enter admin PIN to continue.</div>
+          <input id="pinInput" class="pin-input" type="password" inputmode="numeric" maxlength="4" placeholder="• • • •" />
+          <div class="pin-error" id="pinError">Incorrect PIN. Try again.</div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="pin-btn" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="pin-btn primary" id="pinOk">Continue</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbw-adcztwNOxrEdEgXoYVybc0ByfnuvG3Axt0vQqvNi5saF0F6gLqULa-9twSDY07Wr_A/exec";
+    const AUTO_STOP_ON_SUCCESS = true;
+    const SCAN_DEBOUNCE_MS = 2500;
+    const ADMIN_PIN = "0143";
+
+    const VOICE_ENABLED = true;
+    const SFX_ENABLED = true;
+    const VOICE_LANG = "en-US";
+
+    const state = {
+      scanner: null,
+      scanning: false,
+      cameras: [],
+      lastScan: null,
+      lastScanTime: 0,
+      currentSession: 'morning',
+      prevSession: 'morning',
+      busy: false,
+      todaysLogs: [],
+      liveSessionFilter: 'auto',
+      selectedDate: null,
+
+      dropdownStudentId: null,
+      dropdownExisting: null,
+
+      timeInPinGranted: false,
+      pinModal: null,
+      pinResolve: null,
+
+      _syncTimer: null,
+      _centerPopTimer: null,
+    };
+
+    const el = {
+      clockTime: document.getElementById('clockTime'),
+      clockDate: document.getElementById('clockDate'),
+      sessionBadge: document.getElementById('sessionBadge'),
+
+      scanMode: document.getElementById('scanMode'),
+      scanModeBadge: document.getElementById('scanModeBadge'),
+      cameraSelect: document.getElementById('cameraSelect'),
+      btnStart: document.getElementById('btnStart'),
+      btnStop: document.getElementById('btnStop'),
+
+      systemStatus: document.getElementById('systemStatus'),
+      systemStatusText: document.getElementById('systemStatusText'),
+      liveLogBody: document.getElementById('liveLogBody'),
+      lastScanInfo: document.getElementById('lastScanInfo'),
+      toastContainer: document.getElementById('toastContainer'),
+
+      scanFlash: document.getElementById('scanFlash'),
+      scannerOverlay: document.getElementById('scannerOverlay'),
+      scannerPlaceholder: document.getElementById('scannerPlaceholder'),
+
+      liveWrapper: document.getElementById('liveWrapper'),
+      liveSessionFilter: document.getElementById('liveSessionFilter'),
+      dateSelect: document.getElementById('dateSelect'),
+      registrationLink: document.getElementById('registrationLink'),
+
+      scannerCard: document.getElementById('scannerCard'),
+      tableCard: document.getElementById('tableCard'),
+
+      centerPop: document.getElementById('centerPop'),
+      centerPopTitle: document.getElementById('centerPopTitle'),
+      centerPopSub: document.getElementById('centerPopSub'),
+      centerPopBody: document.getElementById('centerPopBody'),
+
+      pinModalEl: document.getElementById('pinModal'),
+      pinChip: document.getElementById('pinChip'),
+      pinHelp: document.getElementById('pinHelp'),
+      pinInput: document.getElementById('pinInput'),
+      pinError: document.getElementById('pinError'),
+      pinOk: document.getElementById('pinOk'),
+
+      stats: {
+        total: document.getElementById('statTotal'),
+        checkedIn: document.getElementById('statCheckedIn'),
+        checkedOut: document.getElementById('statCheckedOut'),
+        pending: document.getElementById('statPending'),
+      }
+    };
+
+    function syncTableHeightToScanner(){
+      if(!el.scannerCard || !el.tableCard) return;
+      if(window.innerWidth < 1200){
+        el.tableCard.style.height = '';
+        return;
+      }
+      const leftH = Math.round(el.scannerCard.getBoundingClientRect().height);
+      if(leftH > 0) el.tableCard.style.height = leftH + 'px';
+    }
+
+    window.addEventListener('resize', () => {
+      clearTimeout(state._syncTimer);
+      state._syncTimer = setTimeout(syncTableHeightToScanner, 120);
+    });
+
+    function showCenterPop({ title, sub, body, duration = 1700 } = {}){
+      clearTimeout(state._centerPopTimer);
+      if(title) el.centerPopTitle.textContent = title;
+      if(sub) el.centerPopSub.textContent = sub;
+      if(body) el.centerPopBody.textContent = body;
+
+      el.centerPop.classList.add('show');
+      el.centerPop.setAttribute('aria-hidden', 'false');
+
+      state._centerPopTimer = setTimeout(() => {
+        el.centerPop.classList.remove('show');
+        el.centerPop.setAttribute('aria-hidden', 'true');
+      }, duration);
+    }
+
+    function showToast(message, type='info', duration=3000){
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      const icons = { success:'fa-check', error:'fa-xmark', warning:'fa-exclamation', info:'fa-info' };
+      const titles = { success:'Success', error:'Error', warning:'Warning', info:'Info' };
+
+      toast.innerHTML = `
+        <div class="toast-icon"><i class="fa-solid ${icons[type] || icons.info}"></i></div>
+        <div class="toast-content">
+          <div class="toast-title">${titles[type] || titles.info}</div>
+          <div class="toast-message">${message}</div>
+        </div>
+      `;
+      el.toastContainer.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(20px)';
+        setTimeout(() => toast.remove(), 300);
+      }, duration);
+    }
+
+    function flashGreen(){
+      if(!el.scanFlash) return;
+      el.scanFlash.classList.add('on');
+      setTimeout(() => el.scanFlash.classList.remove('on'), 150);
+    }
+
+    let audioCtx = null;
+    function primeAudio(){
+      try{
+        audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+        if(audioCtx.state === 'suspended') audioCtx.resume().catch(()=>{});
+      }catch(e){}
+    }
+    function beep(duration=90, freq=880, vol=0.06){
+      if(!SFX_ENABLED) return;
+      try{
+        audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'sine';
+        o.frequency.value = freq;
+        g.gain.value = vol;
+        o.connect(g);
+        g.connect(audioCtx.destination);
+        o.start();
+        setTimeout(() => o.stop(), duration);
+      }catch(e){}
+    }
+    function sfxScanned(){
+      if(!SFX_ENABLED) return;
+      beep(55, 1040, 0.05);
+      setTimeout(() => beep(55, 1320, 0.045), 70);
+    }
+    function sfxRecorded(){
+      if(!SFX_ENABLED) return;
+      beep(75, 880, 0.06);
+      setTimeout(() => beep(75, 1108, 0.055), 90);
+      setTimeout(() => beep(90, 1320, 0.05), 180);
+    }
+
+    let preferredVoice = null;
+    function initVoice(){
+      if(!VOICE_ENABLED) return;
+      if(!('speechSynthesis' in window)) return;
+      const pick = () => {
+        const voices = window.speechSynthesis.getVoices() || [];
+        preferredVoice =
+          voices.find(v => /google/i.test(v.name) && /en/i.test(v.lang)) ||
+          voices.find(v => /en/i.test(v.lang)) ||
+          voices[0] || null;
+      };
+      pick();
+      window.speechSynthesis.onvoiceschanged = pick;
+    }
+    function speak(text){
+      if(!VOICE_ENABLED) return;
+      if(!('speechSynthesis' in window)) return;
+      try{
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = VOICE_LANG;
+        if(preferredVoice) u.voice = preferredVoice;
+        window.speechSynthesis.speak(u);
+      }catch(e){}
+    }
+
+    async function api(params){
+      params._ts = Date.now();
+      const qs = new URLSearchParams(params).toString();
+      const res = await fetch(`${API_URL}?${qs}`, { cache: "no-store" });
+      const json = await res.json().catch(() => null);
+      if(!json) throw new Error("Invalid JSON response");
+      return json;
+    }
+
+    function todayISO(){
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+    function nowLocalTime12(){
+      return new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', hour12:true });
+    }
+    function timeDisplay(v){
+      if(!v || v === '-') return '-';
+      const s = String(v).trim();
+      if (/^\d{4}-\d{2}-\d{2}T/.test(s)) {
+        const d = new Date(s);
+        if (!isNaN(d)) return d.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', hour12:true });
+      }
+      return s;
+    }
+    function formatDateLabel(iso){
+      const d = new Date(iso + "T00:00:00");
+      if(isNaN(d)) return iso;
+      return d.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'short', day:'numeric' });
+    }
+    function populateDateSelect(logs, activeDate){
+      const dates = new Set();
+      (logs || []).forEach(r => { if(r && r.date) dates.add(String(r.date).trim()); });
+      if(activeDate) dates.add(String(activeDate).trim());
+      const arr = Array.from(dates).filter(Boolean).sort((a,b)=> (a>b ? -1 : 1));
+      el.dateSelect.innerHTML = '';
+      arr.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d;
+        opt.textContent = formatDateLabel(d);
+        el.dateSelect.appendChild(opt);
+      });
+      el.dateSelect.value = (arr.includes(activeDate) ? activeDate : (arr[0] || activeDate || ''));
+    }
+
+    function initPinModal(){
+      state.pinModal = new bootstrap.Modal(el.pinModalEl, { backdrop:'static', keyboard:false });
+
+      el.pinInput.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter'){ e.preventDefault(); el.pinOk.click(); }
+      });
+
+      el.pinOk.addEventListener('click', () => {
+        const pin = String(el.pinInput.value || '').trim();
+        if(pin !== ADMIN_PIN){
+          el.pinError.style.display = 'block';
+          beep(90, 220, 0.08);
+          el.pinInput.focus();
+          return;
+        }
+        el.pinError.style.display = 'none';
+        el.pinInput.value = '';
+        state.pinModal.hide();
+        if(state.pinResolve){ const r = state.pinResolve; state.pinResolve = null; r(true); }
+      });
+
+      el.pinModalEl.addEventListener('hidden.bs.modal', () => {
+        el.pinError.style.display = 'none';
+        el.pinInput.value = '';
+        if(state.pinResolve){ const r = state.pinResolve; state.pinResolve = null; r(false); }
+      });
+    }
+
+    function askAdminPin(purpose, labelText){
+      if(purpose === 'registration'){
+        el.pinChip.textContent = 'Registration';
+        el.pinHelp.textContent = 'Enter admin PIN to open the Registration page.';
+      } else {
+        el.pinChip.textContent = 'Time In';
+        el.pinHelp.textContent = `Enter admin PIN to allow ${labelText || 'Time In'} scanning.`;
+      }
+
+      el.pinError.style.display = 'none';
+      el.pinInput.value = '';
+      state.pinModal.show();
+      setTimeout(() => el.pinInput.focus(), 150);
+
+      return new Promise(resolve => { state.pinResolve = resolve; });
+    }
+
+    function isTimeInLogType(log_type){
+      return log_type === 'am_in' || log_type === 'pm_in';
+    }
+
+    function loadLiveSessionPref(){
+      try { return localStorage.getItem('liveSessionFilter') || 'auto'; }
+      catch(e){ return 'auto'; }
+    }
+    function saveLiveSessionPref(v){
+      try { localStorage.setItem('liveSessionFilter', v); } catch(e){}
+    }
+    function loadDatePref(){
+      try { return localStorage.getItem('selectedDate') || ''; }
+      catch(e){ return ''; }
+    }
+    function saveDatePref(v){
+      try { localStorage.setItem('selectedDate', v); } catch(e){}
+    }
+
+    function updateLiveColumns(){
+      if(!el.liveWrapper) return;
+      el.liveWrapper.classList.remove('show-am', 'show-pm');
+      const pref = state.liveSessionFilter || 'auto';
+      if(pref === 'all') return;
+      const mode = (pref === 'auto') ? (state.currentSession === 'morning' ? 'am' : 'pm') : pref;
+      if(mode === 'am') el.liveWrapper.classList.add('show-am');
+      if(mode === 'pm') el.liveWrapper.classList.add('show-pm');
+    }
+
+    function clearScanModeContext(){
+      state.dropdownStudentId = null;
+      state.dropdownExisting = null;
+      renderScanModeOptions(null);
+    }
+
+    function setScanModeContextForStudent(studentId, date){
+      const existing = findExistingRow(studentId, date);
+      state.dropdownStudentId = studentId;
+      state.dropdownExisting = existing;
+      renderScanModeOptions(existing);
+    }
+
+    function renderScanModeOptions(existingRow = null){
+      const current = el.scanMode.value || 'auto';
+      const hasContext = !!existingRow;
+      const has = (k) => !!(existingRow && String(existingRow[k] || '').trim());
+
+      const allowAmIn  = !hasContext || !has('am_in');
+      const allowAmOut = !hasContext ? true : (has('am_in') && !has('am_out'));
+      const allowPmIn  = !hasContext || !has('pm_in');
+      const allowPmOut = !hasContext ? true : (has('pm_in') && !has('pm_out'));
+
+      el.scanMode.innerHTML = '';
+      el.scanMode.appendChild(new Option('Auto Detect', 'auto'));
+
+      const ogAm = document.createElement('optgroup');
+      ogAm.label = 'AM';
+      if(allowAmIn)  ogAm.appendChild(new Option('AM Time In', 'am_in'));
+      if(allowAmOut) ogAm.appendChild(new Option('AM Time Out', 'am_out'));
+      if(ogAm.children.length) el.scanMode.appendChild(ogAm);
+
+      const ogPm = document.createElement('optgroup');
+      ogPm.label = 'PM';
+      if(allowPmIn)  ogPm.appendChild(new Option('PM Time In', 'pm_in'));
+      if(allowPmOut) ogPm.appendChild(new Option('PM Time Out', 'pm_out'));
+      if(ogPm.children.length) el.scanMode.appendChild(ogPm);
+
+      const exists = [...el.scanMode.options].some(o => o.value === current);
+      el.scanMode.value = exists ? current : 'auto';
+      el.scanModeBadge.textContent = el.scanMode.options[el.scanMode.selectedIndex].text;
+    }
+
+    function updateClock(){
+      const now = new Date();
+      const h = now.getHours();
+
+      el.clockTime.textContent = now.toLocaleTimeString('en-US', { hour12:true });
+      el.clockDate.textContent = now.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+
+      state.prevSession = state.currentSession;
+      state.currentSession = h < 12 ? 'morning' : 'afternoon';
+
+      const isMorning = state.currentSession === 'morning';
+      el.sessionBadge.textContent = isMorning ? 'Morning' : 'Afternoon';
+      el.sessionBadge.classList.toggle('afternoon', !isMorning);
+
+      if(state.prevSession !== state.currentSession){
+        state.timeInPinGranted = false;
+        clearScanModeContext();
+      }
+
+      renderScanModeOptions(state.dropdownExisting || null);
+      updateLiveColumns();
+    }
+    setInterval(updateClock, 1000);
+
+    el.scanMode.addEventListener('change', async () => {
+      el.scanModeBadge.textContent = el.scanMode.options[el.scanMode.selectedIndex].text;
+      state.timeInPinGranted = false;
+
+      const mode = el.scanMode.value || 'auto';
+      if(state.scanning && (mode === 'am_in' || mode === 'pm_in')){
+        const label = el.scanMode.options[el.scanMode.selectedIndex]?.text || 'Time In';
+        const ok = await askAdminPin('timein', label);
+        if(!ok){
+          el.scanMode.value = 'auto';
+          el.scanModeBadge.textContent = el.scanMode.options[el.scanMode.selectedIndex].text;
+          showToast('PIN required for Time In. Mode reset to Auto.', 'warning', 2500);
+          state.timeInPinGranted = false;
+          return;
+        }
+        state.timeInPinGranted = true;
+        showToast('Time In unlocked for this scan session.', 'success', 1800);
+      }
+    });
+
+    el.liveSessionFilter.addEventListener('change', () => {
+      const v = el.liveSessionFilter.value;
+      state.liveSessionFilter = v;
+      saveLiveSessionPref(v);
+      updateLiveColumns();
+      const label = { auto:'Auto (Current)', am:'AM Only', pm:'PM Only', all:'All Day' }[v] || 'Auto';
+      showToast(`Live table: ${label}`, 'info', 1500);
+    });
+
+    el.dateSelect.addEventListener('change', () => {
+      const d = el.dateSelect.value || todayISO();
+      state.selectedDate = d;
+      saveDatePref(d);
+      loadTables(d);
+    });
+
+    function parseTimeToMinutes(t){
+      t = String(t||'').trim();
+      if(!t || t === '-') return null;
+      if (/^\d{4}-\d{2}-\d{2}T/.test(t)) {
+        const d = new Date(t);
+        if (isNaN(d)) return null;
+        return d.getHours() * 60 + d.getMinutes();
+      }
+      const d = new Date('1970-01-01 ' + t);
+      if (isNaN(d)) return null;
+      return d.getHours() * 60 + d.getMinutes();
+    }
+
+    function calcHours(am_in, am_out, pm_in, pm_out){
+      const a1 = parseTimeToMinutes(am_in), a2 = parseTimeToMinutes(am_out);
+      const p1 = parseTimeToMinutes(pm_in), p2 = parseTimeToMinutes(pm_out);
+      const diff = (x,y) => (x!=null && y!=null && y>x) ? (y-x) : 0;
+      const mins = diff(a1,a2) + diff(p1,p2);
+      return mins ? (mins/60).toFixed(2) : '';
+    }
+
+    async function loadTables(date = todayISO()){
+      try{
+        state.selectedDate = date;
+
+        el.lastScanInfo.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i><span>Loading logs for ${date}...</span>`;
+        const resp = await api({ action:'get_logs', date });
+        el.liveLogBody.innerHTML = '';
+        if(!resp.success) throw new Error(resp.message || 'get_logs failed');
+
+        const logs = resp.logs || [];
+        state.todaysLogs = logs;
+
+        populateDateSelect(logs, date);
+
+        el.lastScanInfo.innerHTML = logs.length
+          ? `<i class="fa-solid fa-check" style="color:var(--success)"></i><span>Loaded ${logs.length} record(s)</span>`
+          : `<i class="fa-solid fa-inbox"></i><span>No records for ${formatDateLabel(date)}</span>`;
+
+        const sortedLogs = logs.slice().sort((a, b) => {
+          const getLatestTime = (r) => {
+            const times = [r.am_in, r.am_out, r.pm_in, r.pm_out].filter(t => t && t !== '-');
+            if (times.length === 0) return 0;
+            const last = times[times.length - 1];
+            return new Date(last).getTime() || 0;
+          };
+          return getLatestTime(b) - getLatestTime(a);
+        });
+
+        sortedLogs.forEach((r) => {
+          const amIn = timeDisplay(r.am_in);
+          const amOut = timeDisplay(r.am_out);
+          const pmIn = timeDisplay(r.pm_in);
+          const pmOut = timeDisplay(r.pm_out);
+          const total = String(r.total_hours||'').trim() || calcHours(amIn, amOut, pmIn, pmOut);
+
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>
+              <div class="student-cell">
+                <div class="avatar">${String(r.student_name||'?').charAt(0).toUpperCase()}</div>
+                <div class="student-info">
+                  <div class="student-name">${r.student_name || '-'}</div>
+                  <div class="student-meta">${r.login_type || '-'}</div>
+                </div>
+              </div>
+            </td>
+            <td class="d-none d-md-table-cell">${r.date || '-'}</td>
+            <td class="col-am time-cell">${amIn || '-'}</td>
+            <td class="col-am time-cell">${amOut || '-'}</td>
+            <td class="col-pm time-cell">${pmIn || '-'}</td>
+            <td class="col-pm time-cell">${pmOut || '-'}</td>
+            <td class="hours-cell">${total ? total + 'h' : '-'}</td>
+          `;
+          el.liveLogBody.appendChild(tr);
+        });
+
+        updateStatsFromData();
+        updateLiveColumns();
+
+        if(state.dropdownStudentId){
+          setScanModeContextForStudent(state.dropdownStudentId, date);
+        }
+
+        syncTableHeightToScanner();
+
+      }catch(err){
+        console.error(err);
+        el.lastScanInfo.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color:var(--danger)"></i><span>Failed to load logs</span>`;
+        showToast('Failed to load logs', 'error', 3000);
+        syncTableHeightToScanner();
+      }
+    }
+
+    function updateStatsFromData(){
+      const logs = state.todaysLogs || [];
+      el.stats.total.textContent = logs.length;
+
+      let checkedIn = 0, checkedOut = 0, pending = 0;
+      logs.forEach(r => {
+        const amIn = (timeDisplay(r.am_in) || '').trim();
+        const amOut = (timeDisplay(r.am_out) || '').trim();
+        const pmIn = (timeDisplay(r.pm_in) || '').trim();
+        const pmOut = (timeDisplay(r.pm_out) || '').trim();
+
+        if ((amIn && amIn !== '-') || (pmIn && pmIn !== '-')) checkedIn++;
+        if ((amOut && amOut !== '-') || (pmOut && pmOut !== '-')) checkedOut++;
+        if (((amIn && amIn !== '-') && (!amOut || amOut === '-')) ||
+            ((pmIn && pmIn !== '-') && (!pmOut || pmOut === '-'))) pending++;
+      });
+
+      el.stats.checkedIn.textContent = checkedIn;
+      el.stats.checkedOut.textContent = checkedOut;
+      el.stats.pending.textContent = pending;
+    }
+
+    async function initCameras(){
+      try{
+        state.cameras = await Html5Qrcode.getCameras();
+        el.cameraSelect.innerHTML = '<option value="">Select Camera...</option>';
+        if(!state.cameras.length){
+          showToast('No cameras found. Check permissions.', 'error', 4000);
+          return;
+        }
+        state.cameras.forEach((cam, i) => {
+          const label = cam.label || `Camera ${i+1}`;
+          const shortLabel = label.length > 30 ? label.substring(0, 30) + '...' : label;
+          el.cameraSelect.appendChild(new Option(shortLabel, cam.id));
+        });
+
+        const backCam = state.cameras.find(c =>
+          (c.label||'').toLowerCase().includes('back') ||
+          (c.label||'').toLowerCase().includes('rear') ||
+          (c.label||'').toLowerCase().includes('environment')
+        );
+        if(backCam) el.cameraSelect.value = backCam.id;
+
+      }catch(err){
+        console.error(err);
+        showToast('Camera access denied. Check permissions.', 'error', 4000);
+      }
+    }
+
+    async function startScanner(){
+      if(state.scanning) return;
+
+      clearScanModeContext();
+      primeAudio();
+      initVoice();
+
+      const cameraId = el.cameraSelect.value;
+      if(!cameraId){
+        showToast('Select a camera first', 'warning');
+        return;
+      }
+
+      const mode = el.scanMode.value || 'auto';
+      if(mode === 'am_in' || mode === 'pm_in'){
+        const label = el.scanMode.options[el.scanMode.selectedIndex]?.text || 'Time In';
+        const ok = await askAdminPin('timein', label);
+        if(!ok){
+          showToast('Admin PIN is required for Time In.', 'warning', 2500);
+          return;
+        }
+        state.timeInPinGranted = true;
+      } else {
+        state.timeInPinGranted = false;
+      }
+
+      try{
+        if(!state.scanner) state.scanner = new Html5Qrcode("reader");
+
+        el.scannerPlaceholder.style.display = 'none';
+        el.scannerOverlay.parentElement.classList.add('scanning');
+
+        await state.scanner.start(
+          cameraId,
+          {
+            fps: 30,
+            qrbox: function(viewfinderWidth, viewfinderHeight){
+              const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+              const size = Math.floor(minEdge * 0.75);
+              return { width: size, height: size };
+            },
+            aspectRatio: 1.0,
+            disableFlip: false,
+            experimentalFeatures: { useBarCodeDetectorIfSupported: true },
+            videoConstraints: {
+              facingMode: "environment",
+              focusMode: "continuous",
+              exposureMode: "continuous",
+              whiteBalanceMode: "continuous"
+            }
+          },
+          onScanSuccess,
+          () => {}
+        );
+
+        state.scanning = true;
+        el.btnStart.disabled = true;
+        el.btnStop.disabled = false;
+        el.systemStatus.classList.add('scanning');
+        el.systemStatusText.textContent = 'Scanning';
+        showToast("Scanner activated", "success", 2000);
+
+        syncTableHeightToScanner();
+      }catch(err){
+        console.error(err);
+        showToast("Camera failed to start", "error", 3000);
+        el.scannerPlaceholder.style.display = 'flex';
+        syncTableHeightToScanner();
+      }
+    }
+
+    function stopScanner(){
+      if(!state.scanner || !state.scanning) return;
+      state.scanner.stop().then(() => {
+        state.scanning = false;
+        el.btnStart.disabled = false;
+        el.btnStop.disabled = true;
+        el.scannerOverlay.parentElement.classList.remove('scanning');
+        el.scannerPlaceholder.style.display = 'flex';
+        el.systemStatus.classList.remove('scanning');
+        el.systemStatusText.textContent = 'Online';
+
+        state.timeInPinGranted = false;
+        clearScanModeContext();
+        syncTableHeightToScanner();
+      }).catch(console.error);
+    }
+
+    function pickLogTypeAuto(existingRow){
+      const isAM = state.currentSession === 'morning';
+      if (!existingRow) return isAM ? 'am_in' : 'pm_in';
+
+      if (isAM) {
+        if (!existingRow.am_in) return 'am_in';
+        if (existingRow.am_in && !existingRow.am_out) return 'am_out';
+        return null;
+      } else {
+        if (!existingRow.pm_in) return 'pm_in';
+        if (existingRow.pm_in && !existingRow.pm_out) return 'pm_out';
+        return null;
+      }
+    }
+
+    function findExistingRow(student_id, date){
+      const logs = state.todaysLogs || [];
+      const row = logs.find(r =>
+        String(r.student_id||'').trim() === String(student_id||'').trim() &&
+        String(r.date||'').trim() === String(date||'').trim()
+      );
+      if(!row) return null;
+
+      const norm = (v) => {
+        const t = timeDisplay(v);
+        return (t && t !== '-') ? t : '';
+      };
+
+      return {
+        am_in: norm(row.am_in),
+        am_out: norm(row.am_out),
+        pm_in: norm(row.pm_in),
+        pm_out: norm(row.pm_out),
+      };
+    }
+
+    async function onScanSuccess(decodedText){
+      const now = Date.now();
+      if(state.busy) return;
+      if(state.lastScan === decodedText && (now - state.lastScanTime) < SCAN_DEBOUNCE_MS) return;
+
+      state.lastScan = decodedText;
+      state.lastScanTime = now;
+      state.busy = true;
+
+      try{
+        await processAttendance(decodedText);
+      } finally {
+        state.busy = false;
+      }
+    }
+
+    async function processAttendance(generated_code){
+      const date = todayISO();
+
+      if(el.dateSelect && el.dateSelect.value !== date){
+        state.selectedDate = date;
+        saveDatePref(date);
+      }
+
+      el.lastScanInfo.innerHTML = `
+        <i class="fa-solid fa-circle-notch fa-spin"></i>
+        <span>Processing: ${generated_code}...</span>
+      `;
+
+      try{
+        sfxScanned();
+
+        const found = await api({ action:'find_student', generated_code });
+        if(!found.success){
+          beep(120, 220, 0.08);
+          showToast('Student not found', 'error', 3000);
+          el.lastScanInfo.innerHTML = `<i class="fa-solid fa-xmark" style="color:var(--danger)"></i><span>Invalid code</span>`;
+          return;
+        }
+
+        const student = found.student;
+        speak("Successfully scanned");
+
+        await loadTables(date);
+
+        const existing = findExistingRow(student.student_id, date);
+        setScanModeContextForStudent(student.student_id, date);
+
+        let log_type = el.scanMode.value;
+        if(log_type === 'auto'){
+          log_type = pickLogTypeAuto(existing);
+          if(!log_type){
+            beep(120, 260, 0.06);
+            showToast("Session already completed", 'warning', 2500);
+            return;
+          }
+        }
+
+        if(isTimeInLogType(log_type) && !state.timeInPinGranted){
+          beep(120, 260, 0.06);
+          showToast('Admin PIN required for Time In. Select AM/PM Time In then Start Scanner.', 'warning', 3500);
+          el.lastScanInfo.innerHTML = `<i class="fa-solid fa-lock" style="color:var(--warning)"></i><span>Time In locked (PIN required)</span>`;
+          return;
+        }
+
+        const time = nowLocalTime12();
+        const resp = await api({ action:'log', generated_code, log_type, date, time });
+
+        if(!resp.success){
+          beep(120, 260, 0.06);
+          showToast(resp.message || 'Not recorded', 'warning', 3000);
+          el.lastScanInfo.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color:var(--warning)"></i><span>${student.student_name} • ${resp.message || 'Not recorded'}</span>`;
+          return;
+        }
+
+        flashGreen();
+        sfxRecorded();
+
+        const label = log_type.toUpperCase().replace('_',' ');
+        showCenterPop({
+          title: "Processed Successfully",
+          sub: `${label} saved`,
+          body: `${student.student_name} • ${label} at ${time}`
+        });
+
+        showToast(`${student.student_name} • ${label} at ${time}`, 'success', 3000);
+        el.lastScanInfo.innerHTML = `<i class="fa-solid fa-check" style="color:var(--success)"></i><span>${student.student_name} recorded</span>`;
+
+        await loadTables(date);
+        setScanModeContextForStudent(student.student_id, date);
+
+        if(AUTO_STOP_ON_SUCCESS && state.scanning){
+          setTimeout(() => stopScanner(), 300);
+        }
+
+      } catch(err){
+        console.error(err);
+        beep(120, 220, 0.08);
+        showToast('Network error', 'error', 4000);
+        el.lastScanInfo.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="color:var(--danger)"></i><span>Connection error</span>`;
+      } finally {
+        syncTableHeightToScanner();
+      }
+    }
+
+    function setupRegistrationGate(){
+      if(!el.registrationLink) return;
+      el.registrationLink.addEventListener('click', async (e) => {
+        e.preventDefault();
+        primeAudio();
+        const ok = await askAdminPin('registration', 'Registration');
+        if(!ok){
+          showToast('Admin PIN required to open Registration.', 'warning', 2500);
+          return;
+        }
+        const url = el.registrationLink.getAttribute('href');
+        window.open(url, '_blank', 'noopener');
+      }, { passive:false });
+    }
+
+    el.btnStart.addEventListener('click', startScanner);
+    el.btnStop.addEventListener('click', stopScanner);
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      initVoice();
+      initPinModal();
+      setupRegistrationGate();
+
+      state.liveSessionFilter = loadLiveSessionPref();
+      el.liveSessionFilter.value = state.liveSessionFilter;
+
+      const prefDate = loadDatePref();
+      state.selectedDate = prefDate || todayISO();
+
+      updateClock();
+      updateLiveColumns();
+      renderScanModeOptions(null);
+
+      await initCameras();
+      await loadTables(state.selectedDate);
+
+      setTimeout(syncTableHeightToScanner, 120);
+    });
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
